@@ -1,293 +1,35 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import * as Papa from 'papaparse';
 
+// ── Fallback embedded data (used if CSV fails to load) ───────────────────────
 const EMBEDDED = [
   {
     name: "Indra's Great Trial Indra Pickup Summon",
     dates: '2027-07-02 to 2027-07-14',
     servants: 'Indra',
     image: '',
+    status: 'Upcoming',
   },
   {
     name: "Indra's Great Trial Wandjina Pickup Summon",
     dates: '2027-07-05 to 2027-07-12',
     servants: 'Wandjina',
     image: '',
-  },
-  {
-    name: "Indra's Great Trial Anastasia Pickup Summon",
-    dates: '2027-07-08 to 2027-07-14',
-    servants: 'Anastasia Nikolaevna Romanova, Tlaloc',
-    image: '',
-  },
-  {
-    name: "Indra's Great Trial Kingprotea Pickup Summon",
-    dates: '2027-07-09 to 2027-07-14',
-    servants: 'Kingprotea',
-    image: '',
-  },
-  {
-    name: 'FGO Fes 2027 10th Anniversary Countdown Pickup Summon (Daily)',
-    dates: '2027-07-23 to 2027-08-02',
-    servants: 'Leonardo da Vinci, Leonardo da Vinci (Rider)',
-    image: '',
-  },
-  {
-    name: 'FGO 10th Anniversary U-Olga Marie Pickup Summon',
-    dates: '2027-08-03 to 2027-08-17',
-    servants: 'U-Olga Marie',
-    image: '',
-  },
-  {
-    name: 'FGO Summer 2027 Chaldea U Summer Island Tezcatlipoca Pickup Summon',
-    dates: '2027-08-13 to 2027-09-03',
-    servants: 'Tezcatlipoca, Saito Hajime, Cu Chulainn (Caster)',
-    image: '',
-  },
-  {
-    name: 'FGO Summer 2027 Chaldea U Summer Island Passionlip (Saber) Pickup Summon',
-    dates: '2027-08-13 to 2027-09-03',
-    servants: 'Passionlip (Saber), Kriemhild (Rider)',
-    image: '',
-  },
-  {
-    name: 'FGO Summer 2027 Ryougi Shiki (Moon Cancer) Pickup Summon',
-    dates: '2027-08-15 to 2027-09-03',
-    servants: 'Ryougi Shiki (Moon Cancer), Miyu Edelfelt (Lancer)',
-    image: '',
-  },
-  {
-    name: 'FGO Summer 2027 Larva / Tiamat (Archer) Pickup Summon',
-    dates: '2027-08-17 to 2027-09-03',
-    servants: 'Larva / Tiamat (Archer), Jeunesse Crane',
-    image: '',
-  },
-  {
-    name: 'FGO Summer 2027 Aesc the Savior Pickup Summon',
-    dates: '2027-08-20 to 2027-08-27',
-    servants:
-      'Aesc the Savior, Osakabehime (Archer), Illyasviel von Einzbern (Archer)',
-    image: '',
-  },
-  {
-    name: '32M Downloads Campaign Morgan Pickup Summon',
-    dates: '2027-08-29 to 2027-09-12',
-    servants: 'Morgan, Baobhan Sith',
-    image: '',
-  },
-  {
-    name: 'Vanishing Beginning Nemo / Noah Pickup Summon',
-    dates: '2027-09-05 to 2027-09-24',
-    servants: 'Nemo / Noah, Caster of Okeanos',
-    image: '',
-  },
-  {
-    name: 'Vanishing Beginning Beni-Enma Louhi Pickup 2 Summon (Daily)',
-    dates: '2027-09-07 to 2027-09-24',
-    servants: 'Beni-Enma, Louhi, Caster of Okeanos',
-    image: '',
-  },
-  {
-    name: 'GUDAGUDA Shinsengumi Kawakami Gensai Pickup Summon',
-    dates: '2027-09-24 to 2027-10-15',
-    servants: 'Kawakami Gensai, Todo Heisuke',
-    image: '',
-  },
-  {
-    name: 'GUDAGUDA Shinsengumi Pickup 2 Summon (Daily)',
-    dates: '2027-09-26 to 2027-10-15',
-    servants: 'Hijikata Toshizo, Okita Souji, Yamanami Keisuke',
-    image: '',
-  },
-  {
-    name: 'GUDAGUDA Shinsengumi Kondo Isami Pickup Summon',
-    dates: '2027-10-01 to 2027-10-15',
-    servants: 'Kondo Isami, Todo Heisuke',
-    image: '',
-  },
-  {
-    name: '33M Downloads Campaign Metatron Jeanne Pickup Summon',
-    dates: '2027-10-08 to 2027-10-22',
-    servants: 'Metatron Jeanne, Ashoka the Great',
-    image: '',
-  },
-  {
-    name: 'Final Halloween 2027 Elisabeth Bathory (SSR) Pickup Summon',
-    dates: '2027-10-22 to 2027-11-12',
-    servants: 'Elisabeth Bathory (SSR)',
-    image: '',
-  },
-  {
-    name: 'Final Halloween 2027 Pickup 2 Summon (Daily)',
-    dates: '2027-10-24 to 2027-11-12',
-    servants: 'Jacques de Molay, Achilles, Berserker of El Dorado',
-    image: '',
-  },
-  {
-    name: 'Final Halloween 2027 Pickup 3 Summon (Daily)',
-    dates: '2027-10-28 to 2027-11-06',
-    servants: 'Osakabehime, Vlad III, Watanabe-no-Tsuna, Carmilla',
-    image: '',
-  },
-  {
-    name: 'Pilgrimage Festival 14 Pickup Summon (Daily)',
-    dates: '2027-10-31 to 2027-11-09',
-    servants: 'Van Gogh, Abigail Williams',
-    image: '',
-  },
-  {
-    name: 'FGO Road to Final Chapter 5th Morgan Pickup Summon',
-    dates: '2027-11-03 to 2027-11-10',
-    servants: 'Morgan, Barghest',
-    image: '',
-  },
-  {
-    name: 'FGO Road to Final Chapter 6th Tezcatlipoca Pickup Summon',
-    dates: '2027-11-10 to 2027-11-17',
-    servants: 'Tezcatlipoca, Nitocris',
-    image: '',
-  },
-  {
-    name: 'FGO Road to Final Chapter 7th Medusa (Saber) Pickup Summon',
-    dates: '2027-11-17 to 2027-11-24',
-    servants: 'Medusa (Saber), Duryodhana',
-    image: '',
-  },
-  {
-    name: 'FGO Road to Final Chapter 8th Monte Cristo Pickup Summon',
-    dates: '2027-11-24 to 2027-12-01',
-    servants: 'The Count of Monte Cristo, Alessandro di Cagliostro',
-    image: '',
-  },
-  {
-    name: 'FGO Road to Final Chapter 9th BB (Dubai) Pickup Summon',
-    dates: '2027-12-01 to 2027-12-08',
-    servants: 'BB (Dubai), Tenochtitlan (Moon Cancer)',
-    image: '',
-  },
-  {
-    name: 'FGO Road to Final Chapter 10th Lilith Pickup Summon',
-    dates: '2027-12-08 to 2027-12-15',
-    servants: 'Lilith, Saint Martha (Ruler)',
-    image: '',
-  },
-  {
-    name: 'New Year 2028 Pickup Summon (Daily)',
-    dates: '2028-01-01 to 2028-01-14',
-    servants:
-      'Lord Logres, Phantasmoon, Arjuna (Alter), Biscione, Tutankhamun, Huyan Zhuo, Takeda Shingen, Melusine (Ruler), Miyu Edelfelt, Asvatthaman, Daikokuten, Yui Shousetsu, Xu Fu (Avenger), Nagakura Shinpachi, UDK Barghest',
-    image: '',
-  },
-  {
-    name: 'Fate/strange Fake TV Anime Commemoration Pickup Summon (Daily)',
-    dates: '2028-01-03 to 2028-01-16',
-    servants: 'Richard I, Gilgamesh, Enkidu',
-    image: '',
-  },
-  {
-    name: 'Chaldean Floralia Prerelease Campaign Pickup Summon (Daily)',
-    dates: '2028-01-13 to 2028-01-27',
-    servants: 'Kingprotea, Merlin, Sen-no-Rikyu, Meltryllis, Kama, Passionlip',
-    image: '',
-  },
-  {
-    name: 'FGO Chaldea Satellite Station 2026 Dante Alighieri Pickup Summon',
-    dates: '2028-01-14 to 2028-01-21',
-    servants: 'Dante Alighieri',
-    image: '',
-  },
-  {
-    name: 'Chaldean Floralia Hanasaka no Okina Pickup Summon',
-    dates: '2028-01-23 to 2028-02-13',
-    servants: 'Hanasaka no Okina, Hebi Nyobo, Zhang Jue',
-    image: '',
-  },
-  {
-    name: 'Chaldean Floralia Ereshkigal Pickup 2 Summon',
-    dates: '2028-01-25 to 2028-02-13',
-    servants: 'Ereshkigal, Robin Hood',
-    image: '',
-  },
-  {
-    name: 'Chaldean Floralia Katsushika Hokusai Pickup 3 Summon',
-    dates: '2028-01-27 to 2028-02-13',
-    servants: 'Katsushika Hokusai, Nero Claudius',
-    image: '',
-  },
-  {
-    name: 'Chaldean Floralia Kazuradrop Pickup 4 Summon',
-    dates: '2028-01-29 to 2028-02-13',
-    servants: 'Kazuradrop, Mysterious Alter Ego Λ, Asclepius',
-    image: '',
-  },
-  {
-    name: 'Chaldean Floralia Xiang Yu Pickup 5 Summon',
-    dates: '2028-01-31 to 2028-02-13',
-    servants: 'Xiang Yu, Yu Mei-ren',
-    image: '',
-  },
-  {
-    name: 'FGO Chaldea Satellite Station 2026 Commemoration Indra Pickup Summon',
-    dates: '2028-02-05 to 2028-02-12',
-    servants: 'Indra',
-    image: '',
-  },
-  {
-    name: "Valentine's 2028 Prerelease Campaign Pickup Summon (Daily)",
-    dates: '2028-02-06 to 2028-02-13',
-    servants:
-      'Ono no Komachi, Andromeda, Pope Johanna, Manannan mac Lir (Bazett), Amor (Caren), Sei Shounagon, Murasaki Shikibu, Mysterious Heroine X (Alter), Nero Claudius (Bride)',
-    image: '',
-  },
-  {
-    name: "Valentine's 2028 Demeter Pickup Summon",
-    dates: '2028-02-13 to 2028-03-06',
-    servants: 'Demeter',
-    image: '',
-  },
-  {
-    name: "Valentine's 2028 Pickup 2 Summon (Daily)",
-    dates: '2028-02-16 to 2028-03-06',
-    servants:
-      "Louhi, Helena Blavatsky, Marie Antoinette (Alter), Sitonai, Altria Pendragon (Lancer), Quetzalcoatl, Queen Medb, Nitocris (Alter), Galatea, Europa, Orion, Vritra, Bradamante, Caster of the Nightless City, Xuanzang Sanzang, Ganesha (Jinako), Francis Drake, Nightingale, Tamamo-no-Mae, Jack the Ripper, Altera, Mordred, Altria Pendragon, Dioscuri, Jeanne d'Arc, Kashin Koji, Anastasia Nikolaevna Romanova, Osakabehime",
-    image: '',
-  },
-  {
-    name: 'White Day Memorial 2028 Pickup Summon (Daily)',
-    dates: '2028-03-06 to 2028-03-13',
-    servants:
-      'Dante Alighieri, Charlemagne, Takasugi Shinsaku, Arjuna (Alter), Amakusa Shirou, Odysseus, Archer of Shinjuku, Arthur Pendragon (Prototype), Edmond Dantes, Zhuge Liang (El-Melloi II)',
-    image: '',
-  },
-  {
-    name: 'CBC 2028 Jacques de Molay (Saber) Pickup Summon',
-    dates: '2028-03-11 to 2028-03-25',
-    servants: 'Jacques de Molay (Saber)',
-    image: '',
-  },
-  {
-    name: 'CBC 2028 Pickup 2 Summon (Daily)',
-    dates: '2028-03-13 to 2028-03-25',
-    servants: 'Jacques de Molay, Napoleon, Henry Jekyll & Hyde',
-    image: '',
-  },
-  {
-    name: 'CBC 2028 Pickup 3 Summon (Daily)',
-    dates: '2028-03-15 to 2028-03-25',
-    servants:
-      'Bhima, Cu Chulainn (Alter), Nikola Tesla, Li Shuwen (Assassin), Taigong Wang, Nemo, Ozymandias, Karna, Minamoto-no-Tametomo, Arjuna, Achilles, Vlad III, Enkidu, Xiang Yu, Dioscuri',
-    image: '',
-  },
-  {
-    name: 'Revival: Water Monsters Crisis Pickup Summon (Daily)',
-    dates: '2028-03-19 to 2028-04-09',
-    servants:
-      'Hai Ba Trung, Morgan, Qin Shi Huang, Mysterious Heroine X, Assassin of the Nightless City, Assassin of the Nightless City (Caster), Thomas Edison, Marie Antoinette (Caster)',
-    image: '',
+    status: 'Upcoming',
   },
 ];
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
+// ── CSV auto-load candidates (relative to public folder) ─────────────────────
+const CSV_CANDIDATES = [
+  '/banners.csv',
+  '/fgo_banners.csv',
+  '/fgo_na_predicted_banners.csv',
+];
+
+// ── API base — empty string = same origin (nginx proxies /api → Flask:5050) ──
+const API_BASE = '';
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function parseDates(str) {
   const m = String(str).match(/(\d{4}-\d{2}-\d{2})\s+to\s+(\d{4}-\d{2}-\d{2})/);
   if (!m) return { start: null, end: null };
@@ -296,6 +38,7 @@ function parseDates(str) {
     end: new Date(m[2] + 'T12:00:00'),
   };
 }
+
 function parseServants(str) {
   if (!str) return [];
   return String(str)
@@ -303,6 +46,7 @@ function parseServants(str) {
     .map((s) => s.trim())
     .filter(Boolean);
 }
+
 function fmtDate(d) {
   if (!d) return '?';
   return d.toLocaleDateString('en-US', {
@@ -311,41 +55,65 @@ function fmtDate(d) {
     year: 'numeric',
   });
 }
-function getStatus(d) {
-  const now = new Date();
-  if (!d.start) return 'unknown';
-  if (now > d.end) return 'past';
-  if (now >= d.start) return 'active';
-  return 'upcoming';
-}
+
 function daysUntil(d) {
   return Math.ceil((d - new Date()) / 86400000);
 }
+
 function getYear(d) {
   return d.start ? String(d.start.getFullYear()) : '?';
 }
+
+function fixUrl(url) {
+  if (!url) return '';
+  try {
+    const [path, qs] = url.split('?');
+    const fixed = path
+      .split('/')
+      .map((seg, i) =>
+        i < 3 ? seg : encodeURIComponent(decodeURIComponent(seg)),
+      )
+      .join('/');
+    return qs ? fixed + '?' + qs : fixed;
+  } catch {
+    return url;
+  }
+}
+
+// Use the Status column from CSV directly; fall back to date-based logic
+function resolveStatus(csvStatus, dates) {
+  if (csvStatus) {
+    const s = csvStatus.trim().toLowerCase();
+    if (s === 'active') return 'active';
+    if (s === 'past') return 'past';
+    if (s === 'upcoming') return 'upcoming';
+  }
+  // Fallback: derive from dates
+  const now = new Date();
+  if (!dates.start) return 'unknown';
+  if (now > dates.end) return 'past';
+  if (now >= dates.start) return 'active';
+  return 'upcoming';
+}
+
 function processBanners(raw) {
   return raw
-    .map((r) => ({
-      name: r['Banner Name'] || r.name || '',
-      dates: parseDates(r['Predicted NA Dates'] || r.dates || ''),
-      servants: parseServants(r['Featured Servants'] || r.servants || ''),
-      image: r['Image URL'] || r.image || '',
-    }))
+    .map((r) => {
+      const dates = parseDates(r['Predicted NA Dates'] || r.dates || '');
+      const csvStatus = r['Status'] || r.status || '';
+      return {
+        name: r['Banner Name'] || r.name || '',
+        dates,
+        servants: parseServants(r['Featured Servants'] || r.servants || ''),
+        image: fixUrl(r['Image URL'] || r.image || ''),
+        status: resolveStatus(csvStatus, dates),
+      };
+    })
     .filter((b) => b.dates.start)
     .sort((a, b) => a.dates.start - b.dates.start);
 }
 
-// ── Attempt to auto-fetch CSV from /public folder ──────────────────────────────
-// Place your scraper output as public/banners.csv and it loads on startup.
-// The scraper filename changes daily, so also try common names.
-const CSV_CANDIDATES = [
-  '/banners.csv',
-  '/fgo_banners.csv',
-  '/fgo_na_predicted_banners.csv',
-];
-
-// ── Colours ────────────────────────────────────────────────────────────────────
+// ── Colours ───────────────────────────────────────────────────────────────────
 const C = {
   bg: '#06080f',
   surf: '#0d1120',
@@ -359,22 +127,57 @@ const C = {
   bluedim: '#0f1f48',
   green: '#28a050',
   greendim: '#081c10',
+  red: '#c03838',
+  reddim: '#1c0808',
   text: '#d0d8f0',
   muted: '#4a5578',
 };
 
+const STATUS_INFO = {
+  active: { label: 'ACTIVE', fg: C.green, bg: C.greendim, border: '#1a4828' },
+  upcoming: { label: 'UPCOMING', fg: C.blue, bg: C.bluedim, border: '#1a2e5a' },
+  past: { label: 'PAST', fg: C.muted, bg: C.surf, border: C.border },
+  unknown: { label: '?', fg: C.muted, bg: C.surf, border: C.border },
+};
+
+// ── Pill button ───────────────────────────────────────────────────────────────
+function Pill({ children, active, accent, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '6px 16px',
+        borderRadius: 6,
+        cursor: 'pointer',
+        background: active ? accent + '20' : C.surf,
+        border: `1px solid ${active ? accent + '90' : C.border}`,
+        color: active ? accent : C.muted,
+        fontSize: 12,
+        fontFamily: "'Exo 2', sans-serif",
+        fontWeight: 700,
+        letterSpacing: 0.5,
+        transition: 'all 0.15s',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ── Main App ──────────────────────────────────────────────────────────────────
 export default function App() {
   const [banners, setBanners] = useState(() => processBanners(EMBEDDED));
   const [query, setQuery] = useState('');
   const [yearFilter, setYearFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dragging, setDragging] = useState(false);
-  const [csvLabel, setCsvLabel] = useState(
-    'built-in data · place banners.csv in /public to auto-load',
-  );
+  const [csvLabel, setCsvLabel] = useState('built-in data · loading CSV…');
+  const [refreshState, setRefreshState] = useState('idle'); // idle | loading | success | error
+  const [refreshMsg, setRefreshMsg] = useState('');
   const fileRef = useRef();
 
-  // ── Auto-load CSV from public folder on mount ──────────────────────────────
+  // ── Auto-load CSV on mount ─────────────────────────────────────────────────
   useEffect(() => {
     (async () => {
       for (const path of CSV_CANDIDATES) {
@@ -382,23 +185,25 @@ export default function App() {
           const res = await fetch(path);
           if (!res.ok) continue;
           const text = await res.text();
-          const result = Papa.parse(text, {
+          const { data } = Papa.parse(text, {
             header: true,
             skipEmptyLines: true,
           });
-          const processed = processBanners(result.data);
+          const processed = processBanners(data);
           if (processed.length > 0) {
             setBanners(processed);
-            setCsvLabel(`Auto-loaded: ${path} · ${processed.length} banners`);
+            setCsvLabel(`Loaded: ${path} · ${processed.length} banners`);
             return;
           }
-        } catch (_) {
+        } catch {
           /* try next */
         }
       }
+      setCsvLabel('CSV not found · showing built-in sample data');
     })();
   }, []);
 
+  // ── CSV manual load ────────────────────────────────────────────────────────
   const loadCSV = useCallback((file) => {
     Papa.parse(file, {
       header: true,
@@ -423,6 +228,48 @@ export default function App() {
     [loadCSV],
   );
 
+  // ── Refresh button — calls Flask /api/refresh then reloads CSV ────────────
+  const handleRefresh = async () => {
+    setRefreshState('loading');
+    setRefreshMsg('');
+    try {
+      const res = await fetch(`${API_BASE}/api/refresh`, { method: 'POST' });
+      const json = await res.json();
+      if (json.success) {
+        // Re-load the CSV after scraper finishes
+        for (const path of CSV_CANDIDATES) {
+          try {
+            const r2 = await fetch(path + '?t=' + Date.now()); // bust cache
+            if (!r2.ok) continue;
+            const text = await r2.text();
+            const { data } = Papa.parse(text, {
+              header: true,
+              skipEmptyLines: true,
+            });
+            const processed = processBanners(data);
+            if (processed.length > 0) {
+              setBanners(processed);
+              setCsvLabel(`Refreshed · ${processed.length} banners`);
+              break;
+            }
+          } catch {
+            /* try next */
+          }
+        }
+        setRefreshState('success');
+        setRefreshMsg(json.message || 'Updated.');
+      } else {
+        setRefreshState('error');
+        setRefreshMsg(json.message || 'Scraper error.');
+      }
+    } catch (e) {
+      setRefreshState('error');
+      setRefreshMsg('Could not reach server. Is Flask running?');
+    }
+    setTimeout(() => setRefreshState('idle'), 4000);
+  };
+
+  // ── Derived data ───────────────────────────────────────────────────────────
   const years = useMemo(
     () =>
       [
@@ -436,8 +283,9 @@ export default function App() {
   const stats = useMemo(
     () => ({
       total: banners.length,
-      upcoming: banners.filter((b) => getStatus(b.dates) === 'upcoming').length,
-      active: banners.filter((b) => getStatus(b.dates) === 'active').length,
+      upcoming: banners.filter((b) => b.status === 'upcoming').length,
+      active: banners.filter((b) => b.status === 'active').length,
+      past: banners.filter((b) => b.status === 'past').length,
       servants: new Set(banners.flatMap((b) => b.servants)).size,
     }),
     [banners],
@@ -450,12 +298,11 @@ export default function App() {
         !q ||
         b.name.toLowerCase().includes(q) ||
         b.servants.some((s) => s.toLowerCase().includes(q));
-      const st = getStatus(b.dates);
       const matchSt =
         statusFilter === 'all' ||
+        b.status === statusFilter ||
         (statusFilter === 'upcoming' &&
-          (st === 'upcoming' || st === 'active')) ||
-        statusFilter === st;
+          (b.status === 'upcoming' || b.status === 'active'));
       const matchY = yearFilter === 'all' || getYear(b.dates) === yearFilter;
       return matchQ && matchSt && matchY;
     });
@@ -475,44 +322,29 @@ export default function App() {
       .slice(0, 12);
   }, [query, banners]);
 
-  const statusInfo = {
-    active: { label: 'ACTIVE', fg: C.green, bg: C.greendim, border: '#1a4828' },
-    upcoming: {
-      label: 'UPCOMING',
-      fg: C.blue,
-      bg: C.bluedim,
-      border: '#1a2e5a',
-    },
-    past: { label: 'PAST', fg: C.muted, bg: C.surf, border: C.border },
-    unknown: { label: '?', fg: C.muted, bg: C.surf, border: C.border },
-  };
+  // ── Refresh button colour ──────────────────────────────────────────────────
+  const refreshColor =
+    refreshState === 'success'
+      ? C.green
+      : refreshState === 'error'
+        ? C.red
+        : refreshState === 'loading'
+          ? C.goldbright
+          : C.muted;
 
-  const Pill = ({ children, active, accent, onClick }) => (
-    <button
-      onClick={onClick}
-      style={{
-        padding: '6px 16px',
-        borderRadius: 6,
-        cursor: 'pointer',
-        background: active ? accent + '20' : C.surf,
-        border: `1px solid ${active ? accent + '90' : C.border}`,
-        color: active ? accent : C.muted,
-        fontSize: 12,
-        fontFamily: "'Exo 2', sans-serif",
-        fontWeight: 700,
-        letterSpacing: 0.5,
-        transition: 'all 0.15s',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {children}
-    </button>
-  );
+  const refreshLabel =
+    refreshState === 'loading'
+      ? '↻ Refreshing…'
+      : refreshState === 'success'
+        ? '✓ Updated'
+        : refreshState === 'error'
+          ? '✗ Error'
+          : '↻ Refresh Data';
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div
       style={{
-        // Full-viewport layout: header fixed, content scrolls
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',
@@ -539,7 +371,8 @@ export default function App() {
         input:focus { outline: none; }
         button:active { transform: scale(0.97); }
         @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
+        @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:.55} }
+        @keyframes spin   { to { transform: rotate(360deg); } }
         .bcard { transition: border-color .18s, box-shadow .18s; }
         .bcard:hover { border-color: ${C.borderhi} !important; }
       `}</style>
@@ -593,7 +426,7 @@ export default function App() {
             </p>
           </div>
 
-          {/* CSV controls */}
+          {/* Controls: CSV load + Refresh */}
           <div
             style={{
               display: 'flex',
@@ -602,7 +435,7 @@ export default function App() {
               flexWrap: 'wrap',
             }}
           >
-            <span
+            <div
               style={{
                 fontSize: 11,
                 color: C.muted,
@@ -612,7 +445,57 @@ export default function App() {
               }}
             >
               {csvLabel}
-            </span>
+            </div>
+
+            {/* Refresh button — runs scraper via Flask */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-end',
+                gap: 4,
+              }}
+            >
+              <button
+                onClick={handleRefresh}
+                disabled={refreshState === 'loading'}
+                style={{
+                  padding: '8px 18px',
+                  borderRadius: 7,
+                  cursor:
+                    refreshState === 'loading' ? 'not-allowed' : 'pointer',
+                  background:
+                    refreshState !== 'idle' ? refreshColor + '18' : C.surfhi,
+                  border: `1px solid ${refreshColor + (refreshState === 'idle' ? '00' : '80')}`,
+                  color: refreshColor,
+                  fontSize: 12,
+                  fontFamily: "'Exo 2', sans-serif",
+                  fontWeight: 700,
+                  letterSpacing: 0.5,
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                  opacity: refreshState === 'loading' ? 0.7 : 1,
+                }}
+                title="Re-runs the Python scraper on the server and reloads the CSV"
+              >
+                {refreshLabel}
+              </button>
+              {refreshMsg && (
+                <span
+                  style={{
+                    fontSize: 10,
+                    color: refreshState === 'error' ? C.red : C.green,
+                    maxWidth: 260,
+                    textAlign: 'right',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {refreshMsg}
+                </span>
+              )}
+            </div>
+
+            {/* Manual CSV upload */}
             <button
               onClick={() => fileRef.current.click()}
               style={{
@@ -657,6 +540,9 @@ export default function App() {
             { label: 'UPCOMING', val: stats.upcoming, color: C.blue },
             ...(stats.active > 0
               ? [{ label: 'ACTIVE', val: stats.active, color: C.green }]
+              : []),
+            ...(stats.past > 0
+              ? [{ label: 'PAST', val: stats.past, color: C.muted }]
               : []),
             { label: 'SERVANTS', val: stats.servants, color: '#a090e0' },
           ].map(({ label, val, color }) => (
@@ -877,7 +763,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* ── BANNER LIST (scrollable) ────────────────────────────────────────── */}
+      {/* ── BANNER GRID ─────────────────────────────────────────────────────── */}
       <div
         style={{
           flex: 1,
@@ -919,9 +805,9 @@ export default function App() {
             }}
           >
             {filtered.map((b, i) => {
-              const st = getStatus(b.dates);
-              const info = statusInfo[st];
-              const days = st === 'upcoming' ? daysUntil(b.dates.start) : null;
+              const info = STATUS_INFO[b.status] || STATUS_INFO.unknown;
+              const days =
+                b.status === 'upcoming' ? daysUntil(b.dates.start) : null;
               const q = query.toLowerCase().trim();
               const titleHit = q && b.name.toLowerCase().includes(q);
 
@@ -935,30 +821,36 @@ export default function App() {
                     borderRadius: 10,
                     overflow: 'hidden',
                     border: `1px solid ${titleHit ? C.gold + '60' : C.border}`,
-                    background: st === 'active' ? '#080e0c' : C.surf,
+                    background:
+                      b.status === 'active'
+                        ? '#080e0c'
+                        : b.status === 'past'
+                          ? '#09090d'
+                          : C.surf,
                     boxShadow:
-                      st === 'active' ? `0 0 14px ${C.green}18` : 'none',
+                      b.status === 'active' ? `0 0 14px ${C.green}18` : 'none',
                     animation: `fadeIn 0.15s ease ${Math.min(i * 0.025, 0.4)}s both`,
+                    opacity: b.status === 'past' ? 0.65 : 1,
                   }}
                 >
-                  {/* Status strip — top */}
+                  {/* Status strip */}
                   <div
                     style={{
                       height: 3,
                       width: '100%',
                       flexShrink: 0,
                       background:
-                        st === 'active'
+                        b.status === 'active'
                           ? C.green
-                          : st === 'upcoming'
+                          : b.status === 'upcoming'
                             ? C.blue
                             : C.border,
-                      opacity: st === 'past' ? 0.3 : 1,
+                      opacity: b.status === 'past' ? 0.3 : 1,
                     }}
                   />
 
-                  {/* Banner image — full width, uncropped */}
-                  {b.image ? (
+                  {/* Banner image */}
+                  {b.image && (
                     <div
                       style={{
                         width: '100%',
@@ -976,15 +868,15 @@ export default function App() {
                           width: '100%',
                           height: 'auto',
                           display: 'block',
-                          opacity: st === 'past' ? 0.4 : 1,
+                          opacity: b.status === 'past' ? 0.4 : 1,
                         }}
                       />
                     </div>
-                  ) : null}
+                  )}
 
-                  {/* Content below image */}
+                  {/* Card content */}
                   <div style={{ padding: '12px 16px 14px', flex: 1 }}>
-                    {/* Title + badge */}
+                    {/* Title + status badge */}
                     <div
                       style={{
                         display: 'flex',
@@ -1001,7 +893,7 @@ export default function App() {
                           fontFamily: "'Exo 2', sans-serif",
                           fontWeight: 600,
                           fontSize: 14,
-                          color: st === 'past' ? C.muted : C.text,
+                          color: b.status === 'past' ? C.muted : C.text,
                           lineHeight: 1.35,
                           wordBreak: 'break-word',
                         }}
@@ -1021,7 +913,9 @@ export default function App() {
                           fontWeight: 800,
                           letterSpacing: 1.3,
                           animation:
-                            st === 'active' ? 'pulse 2s infinite' : 'none',
+                            b.status === 'active'
+                              ? 'pulse 2s infinite'
+                              : 'none',
                           alignSelf: 'flex-start',
                         }}
                       >
@@ -1045,15 +939,17 @@ export default function App() {
                           fontSize: 9,
                           fontWeight: 700,
                           letterSpacing: 1.5,
-                          color: C.gold,
+                          color: b.status === 'past' ? C.golddim : C.gold,
                         }}
                       >
-                        NA PREDICTED
+                        {b.status === 'past' || b.status === 'active'
+                          ? 'NA'
+                          : 'NA PREDICTED'}
                       </span>
                       <span
                         style={{
                           fontSize: 13,
-                          color: st === 'past' ? C.muted : '#a8bce0',
+                          color: b.status === 'past' ? C.muted : '#a8bce0',
                           fontWeight: 500,
                         }}
                       >
@@ -1084,7 +980,7 @@ export default function App() {
                           {days}d away
                         </span>
                       )}
-                      {st === 'active' && (
+                      {b.status === 'active' && (
                         <span
                           style={{
                             fontSize: 11,
@@ -1093,7 +989,8 @@ export default function App() {
                             background: C.greendim,
                             padding: '1px 9px',
                             borderRadius: 20,
-                            border: `1px solid #204830`,
+                            border: '1px solid #204830',
+                            animation: 'pulse 2s infinite',
                           }}
                         >
                           ● LIVE NOW
@@ -1157,7 +1054,7 @@ export default function App() {
         <span>
           DATA: grandorder.gamepress.gg · JP +2 YEARS · PREDICTIONS ONLY
         </span>
-        <span>DRAG & DROP CSV ANYWHERE TO REFRESH</span>
+        <span>DRAG & DROP CSV ANYWHERE · ↻ REFRESH DATA RE-RUNS SCRAPER</span>
       </footer>
     </div>
   );
