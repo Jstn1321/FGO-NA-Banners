@@ -11,9 +11,12 @@ Install deps:  pip install flask flask-cors
 from flask import Flask, jsonify
 from flask_cors import CORS
 import subprocess, os, sys
+import sys
 
 app = Flask(__name__)
 CORS(app)
+
+PYTHON = "/home/justin/Website/FGO-Site/fgo-banners/venv/bin/python3"
 
 # Adjust this path to wherever your scraper lives on the server
 SCRAPER_PATH = "/home/justin/Website/FGO-Site/fgo-banners/scraper.py"
@@ -22,7 +25,7 @@ SCRAPER_PATH = "/home/justin/Website/FGO-Site/fgo-banners/scraper.py"
 def refresh():
     try:
         result = subprocess.run(
-            [sys.executable, SCRAPER_PATH],
+            [PYTHON, SCRAPER_PATH],
             capture_output=True,
             text=True,
             timeout=60
