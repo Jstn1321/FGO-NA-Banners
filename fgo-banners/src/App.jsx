@@ -1,7 +1,9 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import * as Papa from 'papaparse';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
 
-// ── Fallback embedded data (used if CSV fails to load) ───────────────────────
+// ── Fallback embedded data (used if CSV fails to load) ─────────────────────
 const EMBEDDED = [
   {
     name: "Indra's Great Trial Indra Pickup Summon",
@@ -343,24 +345,30 @@ export default function App() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-        width: '100%',
-        background: C.bg,
-        color: C.text,
-        fontFamily: "'Exo 2', sans-serif",
-      }}
-      onDragOver={(e) => {
-        e.preventDefault();
-        setDragging(true);
-      }}
-      onDragLeave={() => setDragging(false)}
-      onDrop={onDrop}
-    >
-      <style>{`
+    <BrowserRouter basename="/fgo">
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route
+          path="/banner-list"
+          element={
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: '100vh',
+                width: '100%',
+                background: C.bg,
+                color: C.text,
+                fontFamily: "'Exo 2', sans-serif",
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragging(true);
+              }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={onDrop}
+            >
+              <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@300;400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body, #root { width: 100%; height: 100%; }
@@ -377,685 +385,734 @@ export default function App() {
         .bcard:hover { border-color: ${C.borderhi} !important; }
       `}</style>
 
-      {/* ── HEADER ─────────────────────────────────────────────────────────── */}
-      <header
-        style={{
-          width: '100%',
-          background: `linear-gradient(180deg,#0b0e1c 0%,${C.bg} 100%)`,
-          borderBottom: `1px solid ${C.border}`,
-          padding: '16px 32px',
-          flexShrink: 0,
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 16,
-            marginBottom: 16,
-          }}
-        >
-          {/* Title */}
-          <div>
-            <h1
-              style={{
-                fontFamily: "'Cinzel', serif",
-                fontSize: 24,
-                fontWeight: 900,
-                letterSpacing: 3,
-                background: `linear-gradient(90deg,${C.goldbright},#e8d48a,${C.goldbright})`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              FATE/GRAND ORDER
-            </h1>
-            <p
-              style={{
-                fontFamily: "'Cinzel', serif",
-                fontSize: 9,
-                letterSpacing: 4,
-                color: C.muted,
-                fontWeight: 700,
-                marginTop: 3,
-              }}
-            >
-              NA SERVER · PREDICTED BANNER CALENDAR
-            </p>
-          </div>
-
-          {/* Controls: CSV load + Refresh */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              flexWrap: 'wrap',
-            }}
-          >
-            <div
-              style={{
-                fontSize: 11,
-                color: C.muted,
-                maxWidth: 340,
-                textAlign: 'right',
-                lineHeight: 1.4,
-              }}
-            >
-              {csvLabel}
-            </div>
-
-            {/* Refresh button — runs scraper via Flask */}
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-end',
-                gap: 4,
-              }}
-            >
-              <button
-                onClick={handleRefresh}
-                disabled={refreshState === 'loading'}
+              {/* ── HEADER ─────────────────────────────────────────────────────────── */}
+              <header
                 style={{
-                  padding: '8px 18px',
-                  borderRadius: 7,
-                  cursor:
-                    refreshState === 'loading' ? 'not-allowed' : 'pointer',
-                  background:
-                    refreshState !== 'idle' ? refreshColor + '18' : C.surfhi,
-                  border: `1px solid ${refreshColor + (refreshState === 'idle' ? '00' : '80')}`,
-                  color: refreshColor,
-                  fontSize: 12,
-                  fontFamily: "'Exo 2', sans-serif",
-                  fontWeight: 700,
-                  letterSpacing: 0.5,
-                  transition: 'all 0.2s',
-                  whiteSpace: 'nowrap',
-                  opacity: refreshState === 'loading' ? 0.7 : 1,
-                }}
-                title="Re-runs the Python scraper on the server and reloads the CSV"
-              >
-                {refreshLabel}
-              </button>
-              {refreshMsg && (
-                <span
-                  style={{
-                    fontSize: 10,
-                    color: refreshState === 'error' ? C.red : C.green,
-                    maxWidth: 260,
-                    textAlign: 'right',
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {refreshMsg}
-                </span>
-              )}
-            </div>
-
-            {/* Manual CSV upload */}
-            <button
-              onClick={() => fileRef.current.click()}
-              style={{
-                padding: '8px 18px',
-                borderRadius: 7,
-                cursor: 'pointer',
-                background: C.surfhi,
-                border: `1px solid ${C.borderhi}`,
-                color: C.muted,
-                fontSize: 12,
-                fontFamily: "'Exo 2', sans-serif",
-                fontWeight: 700,
-                letterSpacing: 0.5,
-                transition: 'all 0.15s',
-                whiteSpace: 'nowrap',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = C.gold;
-                e.currentTarget.style.color = C.goldbright;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = C.borderhi;
-                e.currentTarget.style.color = C.muted;
-              }}
-            >
-              ↑ Load CSV
-            </button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept=".csv"
-              style={{ display: 'none' }}
-              onChange={(e) => e.target.files[0] && loadCSV(e.target.files[0])}
-            />
-          </div>
-        </div>
-
-        {/* Stats row */}
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          {[
-            { label: 'BANNERS', val: stats.total, color: C.goldbright },
-            { label: 'UPCOMING', val: stats.upcoming, color: C.blue },
-            ...(stats.active > 0
-              ? [{ label: 'ACTIVE', val: stats.active, color: C.green }]
-              : []),
-            ...(stats.past > 0
-              ? [{ label: 'PAST', val: stats.past, color: C.muted }]
-              : []),
-            { label: 'SERVANTS', val: stats.servants, color: '#a090e0' },
-          ].map(({ label, val, color }) => (
-            <div
-              key={label}
-              style={{
-                padding: '8px 20px',
-                borderRadius: 8,
-                background: C.surfhi,
-                border: `1px solid ${C.border}`,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 2,
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: "'Cinzel', serif",
-                  fontSize: 20,
-                  fontWeight: 700,
-                  color,
-                  lineHeight: 1,
+                  width: '100%',
+                  background: `linear-gradient(180deg,#0b0e1c 0%,${C.bg} 100%)`,
+                  borderBottom: `1px solid ${C.border}`,
+                  padding: '16px 32px',
+                  flexShrink: 0,
                 }}
               >
-                {val}
-              </span>
-              <span style={{ fontSize: 9, color: C.muted, letterSpacing: 1.5 }}>
-                {label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </header>
-
-      {/* ── CONTROLS BAR ───────────────────────────────────────────────────── */}
-      <div
-        style={{
-          width: '100%',
-          padding: '14px 32px 10px',
-          background: C.bg,
-          borderBottom: `1px solid ${C.border}`,
-          flexShrink: 0,
-        }}
-      >
-        {/* Search */}
-        <div style={{ position: 'relative', marginBottom: 10 }}>
-          <span
-            style={{
-              position: 'absolute',
-              left: 14,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: C.muted,
-              fontSize: 17,
-              pointerEvents: 'none',
-            }}
-          >
-            ⌕
-          </span>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={
-              dragging
-                ? 'Drop CSV here…'
-                : 'Search by servant name or banner title…'
-            }
-            style={{
-              width: '100%',
-              padding: '11px 42px',
-              background: dragging ? '#0d1820' : C.surfhi,
-              border: `1px solid ${dragging ? C.gold : query ? C.borderhi : C.border}`,
-              borderRadius: 9,
-              color: C.text,
-              fontSize: 14,
-              fontFamily: "'Exo 2', sans-serif",
-              fontWeight: 500,
-              transition: 'border-color 0.15s',
-            }}
-          />
-          {query && (
-            <button
-              onClick={() => setQuery('')}
-              style={{
-                position: 'absolute',
-                right: 12,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                color: C.muted,
-                cursor: 'pointer',
-                fontSize: 20,
-                lineHeight: 1,
-              }}
-            >
-              ×
-            </button>
-          )}
-        </div>
-
-        {/* Servant match badges */}
-        {servantMatches.length > 0 && (
-          <div
-            style={{
-              marginBottom: 10,
-              padding: '8px 12px',
-              background: '#0c1018',
-              border: `1px solid ${C.gold}25`,
-              borderRadius: 8,
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 6,
-              alignItems: 'center',
-            }}
-          >
-            <span
-              style={{
-                fontSize: 9,
-                color: C.golddim,
-                fontWeight: 800,
-                letterSpacing: 1.2,
-              }}
-            >
-              MATCHING SERVANTS
-            </span>
-            {servantMatches.map(([s, n]) => (
-              <span
-                key={s}
-                style={{
-                  padding: '2px 10px',
-                  borderRadius: 20,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  background: '#1c1200',
-                  color: C.goldbright,
-                  border: `1px solid ${C.golddim}`,
-                }}
-              >
-                {s}{' '}
-                <span style={{ color: C.golddim, fontWeight: 400 }}>×{n}</span>
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Filter pills */}
-        <div
-          style={{
-            display: 'flex',
-            gap: 6,
-            flexWrap: 'wrap',
-            alignItems: 'center',
-          }}
-        >
-          <Pill
-            active={yearFilter === 'all' && statusFilter === 'all'}
-            accent={C.goldbright}
-            onClick={() => {
-              setYearFilter('all');
-              setStatusFilter('all');
-            }}
-          >
-            ALL
-          </Pill>
-          <Pill
-            active={statusFilter === 'upcoming'}
-            accent={C.blue}
-            onClick={() =>
-              setStatusFilter((p) => (p === 'upcoming' ? 'all' : 'upcoming'))
-            }
-          >
-            UPCOMING
-          </Pill>
-          {stats.active > 0 && (
-            <Pill
-              active={statusFilter === 'active'}
-              accent={C.green}
-              onClick={() =>
-                setStatusFilter((p) => (p === 'active' ? 'all' : 'active'))
-              }
-            >
-              ACTIVE
-            </Pill>
-          )}
-          <Pill
-            active={statusFilter === 'past'}
-            accent={C.muted}
-            onClick={() =>
-              setStatusFilter((p) => (p === 'past' ? 'all' : 'past'))
-            }
-          >
-            PAST
-          </Pill>
-          <span
-            style={{
-              width: 1,
-              background: C.border,
-              height: 24,
-              alignSelf: 'center',
-              margin: '0 4px',
-            }}
-          />
-          {years.map((y) => (
-            <Pill
-              key={y}
-              active={yearFilter === y}
-              accent="#9080d0"
-              onClick={() => setYearFilter((p) => (p === y ? 'all' : y))}
-            >
-              {y}
-            </Pill>
-          ))}
-          <span style={{ fontSize: 11, color: C.muted, marginLeft: 'auto' }}>
-            {filtered.length} of {banners.length} banners
-          </span>
-        </div>
-      </div>
-
-      {/* ── BANNER GRID ─────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '16px 32px 40px',
-          width: '100%',
-        }}
-      >
-        {filtered.length === 0 ? (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: '100px 20px',
-              border: `1px dashed ${C.border}`,
-              borderRadius: 12,
-              background: C.surf,
-            }}
-          >
-            <div style={{ fontSize: 30, opacity: 0.3, marginBottom: 10 }}>
-              ⚜
-            </div>
-            <div
-              style={{
-                fontFamily: "'Cinzel',serif",
-                fontSize: 14,
-                letterSpacing: 2,
-                color: C.muted,
-              }}
-            >
-              NO RESULTS
-            </div>
-          </div>
-        ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
-              gap: 12,
-            }}
-          >
-            {filtered.map((b, i) => {
-              const info = STATUS_INFO[b.status] || STATUS_INFO.unknown;
-              const days =
-                b.status === 'upcoming' ? daysUntil(b.dates.start) : null;
-              const q = query.toLowerCase().trim();
-              const titleHit = q && b.name.toLowerCase().includes(q);
-
-              return (
                 <div
-                  key={i}
-                  className="bcard"
                   style={{
                     display: 'flex',
-                    flexDirection: 'column',
-                    borderRadius: 10,
-                    overflow: 'hidden',
-                    border: `1px solid ${titleHit ? C.gold + '60' : C.border}`,
-                    background:
-                      b.status === 'active'
-                        ? '#080e0c'
-                        : b.status === 'past'
-                          ? '#09090d'
-                          : C.surf,
-                    boxShadow:
-                      b.status === 'active' ? `0 0 14px ${C.green}18` : 'none',
-                    animation: `fadeIn 0.15s ease ${Math.min(i * 0.025, 0.4)}s both`,
-                    opacity: b.status === 'past' ? 0.65 : 1,
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: 16,
+                    marginBottom: 16,
                   }}
                 >
-                  {/* Status strip */}
+                  {/* Title */}
+                  <div>
+                    <h1
+                      style={{
+                        fontFamily: "'Cinzel', serif",
+                        fontSize: 24,
+                        fontWeight: 900,
+                        letterSpacing: 3,
+                        background: `linear-gradient(90deg,${C.goldbright},#e8d48a,${C.goldbright})`,
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                      }}
+                    >
+                      FATE/GRAND ORDER
+                    </h1>
+                    <p
+                      style={{
+                        fontFamily: "'Cinzel', serif",
+                        fontSize: 9,
+                        letterSpacing: 4,
+                        color: C.muted,
+                        fontWeight: 700,
+                        marginTop: 3,
+                      }}
+                    >
+                      NA SERVER · PREDICTED BANNER CALENDAR
+                    </p>
+                  </div>
+
+                  {/* Controls: CSV load + Refresh */}
                   <div
                     style={{
-                      height: 3,
-                      width: '100%',
-                      flexShrink: 0,
-                      background:
-                        b.status === 'active'
-                          ? C.green
-                          : b.status === 'upcoming'
-                            ? C.blue
-                            : C.border,
-                      opacity: b.status === 'past' ? 0.3 : 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      flexWrap: 'wrap',
                     }}
-                  />
-
-                  {/* Banner image */}
-                  {b.image && (
+                  >
                     <div
                       style={{
-                        width: '100%',
-                        background: '#060910',
-                        lineHeight: 0,
+                        fontSize: 11,
+                        color: C.muted,
+                        maxWidth: 340,
+                        textAlign: 'right',
+                        lineHeight: 1.4,
                       }}
                     >
-                      <img
-                        src={b.image}
-                        alt=""
-                        onError={(e) =>
-                          (e.target.parentElement.style.display = 'none')
-                        }
-                        style={{
-                          width: '100%',
-                          height: 'auto',
-                          display: 'block',
-                          opacity: b.status === 'past' ? 0.4 : 1,
-                        }}
-                      />
+                      {csvLabel}
                     </div>
-                  )}
 
-                  {/* Card content */}
-                  <div style={{ padding: '12px 16px 14px', flex: 1 }}>
-                    {/* Title + status badge */}
+                    {/* Refresh button — runs scraper via Flask */}
                     <div
                       style={{
                         display: 'flex',
-                        gap: 10,
-                        alignItems: 'flex-start',
-                        marginBottom: 8,
-                        flexWrap: 'wrap',
+                        flexDirection: 'column',
+                        alignItems: 'flex-end',
+                        gap: 4,
                       }}
                     >
-                      <p
+                      <button
+                        onClick={handleRefresh}
+                        disabled={refreshState === 'loading'}
                         style={{
-                          flex: 1,
-                          minWidth: 0,
+                          padding: '8px 18px',
+                          borderRadius: 7,
+                          cursor:
+                            refreshState === 'loading'
+                              ? 'not-allowed'
+                              : 'pointer',
+                          background:
+                            refreshState !== 'idle'
+                              ? refreshColor + '18'
+                              : C.surfhi,
+                          border: `1px solid ${refreshColor + (refreshState === 'idle' ? '00' : '80')}`,
+                          color: refreshColor,
+                          fontSize: 12,
                           fontFamily: "'Exo 2', sans-serif",
-                          fontWeight: 600,
-                          fontSize: 14,
-                          color: b.status === 'past' ? C.muted : C.text,
-                          lineHeight: 1.35,
-                          wordBreak: 'break-word',
-                        }}
-                      >
-                        {b.name}
-                      </p>
-                      <div
-                        style={{
-                          flexShrink: 0,
-                          padding: '3px 9px',
-                          borderRadius: 5,
-                          background: info.bg,
-                          border: `1px solid ${info.border}`,
-                          color: info.fg,
-                          fontSize: 9,
-                          fontFamily: "'Exo 2', sans-serif",
-                          fontWeight: 800,
-                          letterSpacing: 1.3,
-                          animation:
-                            b.status === 'active'
-                              ? 'pulse 2s infinite'
-                              : 'none',
-                          alignSelf: 'flex-start',
-                        }}
-                      >
-                        {info.label}
-                      </div>
-                    </div>
-
-                    {/* Dates */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        alignItems: 'center',
-                        gap: 8,
-                        marginBottom: 10,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily: "'Cinzel',serif",
-                          fontSize: 9,
                           fontWeight: 700,
-                          letterSpacing: 1.5,
-                          color: b.status === 'past' ? C.golddim : C.gold,
+                          letterSpacing: 0.5,
+                          transition: 'all 0.2s',
+                          whiteSpace: 'nowrap',
+                          opacity: refreshState === 'loading' ? 0.7 : 1,
                         }}
+                        title="Re-runs the Python scraper on the server and reloads the CSV"
                       >
-                        {b.status === 'past' || b.status === 'active'
-                          ? 'NA'
-                          : 'NA PREDICTED'}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 13,
-                          color: b.status === 'past' ? C.muted : '#a8bce0',
-                          fontWeight: 500,
-                        }}
-                      >
-                        {fmtDate(b.dates.start)} — {fmtDate(b.dates.end)}
-                      </span>
-                      {days !== null && (
+                        {refreshLabel}
+                      </button>
+                      {refreshMsg && (
                         <span
                           style={{
-                            fontSize: 12,
-                            fontWeight: 800,
-                            color:
-                              days <= 14
-                                ? C.goldbright
-                                : days <= 60
-                                  ? C.blue
-                                  : C.muted,
-                            background:
-                              days <= 14
-                                ? '#180e00'
-                                : days <= 60
-                                  ? C.bluedim
-                                  : C.surf,
-                            padding: '1px 9px',
-                            borderRadius: 20,
-                            border: `1px solid ${days <= 14 ? C.golddim : days <= 60 ? '#1a3060' : C.border}`,
+                            fontSize: 10,
+                            color: refreshState === 'error' ? C.red : C.green,
+                            maxWidth: 260,
+                            textAlign: 'right',
+                            lineHeight: 1.4,
                           }}
                         >
-                          {days}d away
-                        </span>
-                      )}
-                      {b.status === 'active' && (
-                        <span
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 800,
-                            color: C.green,
-                            background: C.greendim,
-                            padding: '1px 9px',
-                            borderRadius: 20,
-                            border: '1px solid #204830',
-                            animation: 'pulse 2s infinite',
-                          }}
-                        >
-                          ● LIVE NOW
+                          {refreshMsg}
                         </span>
                       )}
                     </div>
 
-                    {/* Servants */}
-                    {b.servants.length > 0 && (
-                      <div
-                        style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}
-                      >
-                        {b.servants.map((s, j) => {
-                          const hit = q && s.toLowerCase().includes(q);
-                          return (
-                            <span
-                              key={j}
-                              style={{
-                                padding: '3px 10px',
-                                borderRadius: 20,
-                                fontSize: 12,
-                                fontWeight: hit ? 700 : 400,
-                                background: hit ? '#1a1000' : '#0f1428',
-                                color: hit ? C.goldbright : '#6070a0',
-                                border: `1px solid ${hit ? C.golddim : '#1c2440'}`,
-                                boxShadow: hit ? `0 0 6px ${C.gold}25` : 'none',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {s}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    )}
+                    {/* Manual CSV upload */}
+                    <button
+                      onClick={() => fileRef.current.click()}
+                      style={{
+                        padding: '8px 18px',
+                        borderRadius: 7,
+                        cursor: 'pointer',
+                        background: C.surfhi,
+                        border: `1px solid ${C.borderhi}`,
+                        color: C.muted,
+                        fontSize: 12,
+                        fontFamily: "'Exo 2', sans-serif",
+                        fontWeight: 700,
+                        letterSpacing: 0.5,
+                        transition: 'all 0.15s',
+                        whiteSpace: 'nowrap',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = C.gold;
+                        e.currentTarget.style.color = C.goldbright;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = C.borderhi;
+                        e.currentTarget.style.color = C.muted;
+                      }}
+                    >
+                      ↑ Load CSV
+                    </button>
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept=".csv"
+                      style={{ display: 'none' }}
+                      onChange={(e) =>
+                        e.target.files[0] && loadCSV(e.target.files[0])
+                      }
+                    />
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
 
-      {/* ── FOOTER ─────────────────────────────────────────────────────────── */}
-      <footer
-        style={{
-          width: '100%',
-          borderTop: `1px solid ${C.border}`,
-          padding: '10px 32px',
-          flexShrink: 0,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: 8,
-          fontSize: 10,
-          color: C.muted,
-          letterSpacing: 0.8,
-        }}
-      >
-        <span>
-          DATA: grandorder.gamepress.gg · JP +2 YEARS · PREDICTIONS ONLY
-        </span>
-        <span>DRAG & DROP CSV ANYWHERE · ↻ REFRESH DATA RE-RUNS SCRAPER</span>
-      </footer>
-    </div>
+                {/* Stats row */}
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {[
+                    { label: 'BANNERS', val: stats.total, color: C.goldbright },
+                    { label: 'UPCOMING', val: stats.upcoming, color: C.blue },
+                    ...(stats.active > 0
+                      ? [{ label: 'ACTIVE', val: stats.active, color: C.green }]
+                      : []),
+                    ...(stats.past > 0
+                      ? [{ label: 'PAST', val: stats.past, color: C.muted }]
+                      : []),
+                    {
+                      label: 'SERVANTS',
+                      val: stats.servants,
+                      color: '#a090e0',
+                    },
+                  ].map(({ label, val, color }) => (
+                    <div
+                      key={label}
+                      style={{
+                        padding: '8px 20px',
+                        borderRadius: 8,
+                        background: C.surfhi,
+                        border: `1px solid ${C.border}`,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 2,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: "'Cinzel', serif",
+                          fontSize: 20,
+                          fontWeight: 700,
+                          color,
+                          lineHeight: 1,
+                        }}
+                      >
+                        {val}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 9,
+                          color: C.muted,
+                          letterSpacing: 1.5,
+                        }}
+                      >
+                        {label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </header>
+
+              {/* ── CONTROLS BAR ───────────────────────────────────────────────────── */}
+              <div
+                style={{
+                  width: '100%',
+                  padding: '14px 32px 10px',
+                  background: C.bg,
+                  borderBottom: `1px solid ${C.border}`,
+                  flexShrink: 0,
+                }}
+              >
+                {/* Search */}
+                <div style={{ position: 'relative', marginBottom: 10 }}>
+                  <span
+                    style={{
+                      position: 'absolute',
+                      left: 14,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: C.muted,
+                      fontSize: 17,
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    ⌕
+                  </span>
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder={
+                      dragging
+                        ? 'Drop CSV here…'
+                        : 'Search by servant name or banner title…'
+                    }
+                    style={{
+                      width: '100%',
+                      padding: '11px 42px',
+                      background: dragging ? '#0d1820' : C.surfhi,
+                      border: `1px solid ${dragging ? C.gold : query ? C.borderhi : C.border}`,
+                      borderRadius: 9,
+                      color: C.text,
+                      fontSize: 14,
+                      fontFamily: "'Exo 2', sans-serif",
+                      fontWeight: 500,
+                      transition: 'border-color 0.15s',
+                    }}
+                  />
+                  {query && (
+                    <button
+                      onClick={() => setQuery('')}
+                      style={{
+                        position: 'absolute',
+                        right: 12,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        color: C.muted,
+                        cursor: 'pointer',
+                        fontSize: 20,
+                        lineHeight: 1,
+                      }}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+
+                {/* Servant match badges */}
+                {servantMatches.length > 0 && (
+                  <div
+                    style={{
+                      marginBottom: 10,
+                      padding: '8px 12px',
+                      background: '#0c1018',
+                      border: `1px solid ${C.gold}25`,
+                      borderRadius: 8,
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: 6,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 9,
+                        color: C.golddim,
+                        fontWeight: 800,
+                        letterSpacing: 1.2,
+                      }}
+                    >
+                      MATCHING SERVANTS
+                    </span>
+                    {servantMatches.map(([s, n]) => (
+                      <span
+                        key={s}
+                        style={{
+                          padding: '2px 10px',
+                          borderRadius: 20,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          background: '#1c1200',
+                          color: C.goldbright,
+                          border: `1px solid ${C.golddim}`,
+                        }}
+                      >
+                        {s}{' '}
+                        <span style={{ color: C.golddim, fontWeight: 400 }}>
+                          ×{n}
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Filter pills */}
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 6,
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Pill
+                    active={yearFilter === 'all' && statusFilter === 'all'}
+                    accent={C.goldbright}
+                    onClick={() => {
+                      setYearFilter('all');
+                      setStatusFilter('all');
+                    }}
+                  >
+                    ALL
+                  </Pill>
+                  <Pill
+                    active={statusFilter === 'upcoming'}
+                    accent={C.blue}
+                    onClick={() =>
+                      setStatusFilter((p) =>
+                        p === 'upcoming' ? 'all' : 'upcoming',
+                      )
+                    }
+                  >
+                    UPCOMING
+                  </Pill>
+                  {stats.active > 0 && (
+                    <Pill
+                      active={statusFilter === 'active'}
+                      accent={C.green}
+                      onClick={() =>
+                        setStatusFilter((p) =>
+                          p === 'active' ? 'all' : 'active',
+                        )
+                      }
+                    >
+                      ACTIVE
+                    </Pill>
+                  )}
+                  <Pill
+                    active={statusFilter === 'past'}
+                    accent={C.muted}
+                    onClick={() =>
+                      setStatusFilter((p) => (p === 'past' ? 'all' : 'past'))
+                    }
+                  >
+                    PAST
+                  </Pill>
+                  <span
+                    style={{
+                      width: 1,
+                      background: C.border,
+                      height: 24,
+                      alignSelf: 'center',
+                      margin: '0 4px',
+                    }}
+                  />
+                  {years.map((y) => (
+                    <Pill
+                      key={y}
+                      active={yearFilter === y}
+                      accent="#9080d0"
+                      onClick={() =>
+                        setYearFilter((p) => (p === y ? 'all' : y))
+                      }
+                    >
+                      {y}
+                    </Pill>
+                  ))}
+                  <span
+                    style={{ fontSize: 11, color: C.muted, marginLeft: 'auto' }}
+                  >
+                    {filtered.length} of {banners.length} banners
+                  </span>
+                </div>
+              </div>
+
+              {/* ── BANNER GRID ─────────────────────────────────────────────────────── */}
+              <div
+                style={{
+                  flex: 1,
+                  overflowY: 'auto',
+                  padding: '16px 32px 40px',
+                  width: '100%',
+                }}
+              >
+                {filtered.length === 0 ? (
+                  <div
+                    style={{
+                      textAlign: 'center',
+                      padding: '100px 20px',
+                      border: `1px dashed ${C.border}`,
+                      borderRadius: 12,
+                      background: C.surf,
+                    }}
+                  >
+                    <div
+                      style={{ fontSize: 30, opacity: 0.3, marginBottom: 10 }}
+                    >
+                      ⚜
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: "'Cinzel',serif",
+                        fontSize: 14,
+                        letterSpacing: 2,
+                        color: C.muted,
+                      }}
+                    >
+                      NO RESULTS
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns:
+                        'repeat(auto-fill, minmax(360px, 1fr))',
+                      gap: 12,
+                    }}
+                  >
+                    {filtered.map((b, i) => {
+                      const info = STATUS_INFO[b.status] || STATUS_INFO.unknown;
+                      const days =
+                        b.status === 'upcoming'
+                          ? daysUntil(b.dates.start)
+                          : null;
+                      const q = query.toLowerCase().trim();
+                      const titleHit = q && b.name.toLowerCase().includes(q);
+
+                      return (
+                        <div
+                          key={i}
+                          className="bcard"
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            borderRadius: 10,
+                            overflow: 'hidden',
+                            border: `1px solid ${titleHit ? C.gold + '60' : C.border}`,
+                            background:
+                              b.status === 'active'
+                                ? '#080e0c'
+                                : b.status === 'past'
+                                  ? '#09090d'
+                                  : C.surf,
+                            boxShadow:
+                              b.status === 'active'
+                                ? `0 0 14px ${C.green}18`
+                                : 'none',
+                            animation: `fadeIn 0.15s ease ${Math.min(i * 0.025, 0.4)}s both`,
+                            opacity: b.status === 'past' ? 0.65 : 1,
+                          }}
+                        >
+                          {/* Status strip */}
+                          <div
+                            style={{
+                              height: 3,
+                              width: '100%',
+                              flexShrink: 0,
+                              background:
+                                b.status === 'active'
+                                  ? C.green
+                                  : b.status === 'upcoming'
+                                    ? C.blue
+                                    : C.border,
+                              opacity: b.status === 'past' ? 0.3 : 1,
+                            }}
+                          />
+
+                          {/* Banner image */}
+                          {b.image && (
+                            <div
+                              style={{
+                                width: '100%',
+                                background: '#060910',
+                                lineHeight: 0,
+                              }}
+                            >
+                              <img
+                                src={b.image}
+                                alt=""
+                                onError={(e) =>
+                                  (e.target.parentElement.style.display =
+                                    'none')
+                                }
+                                style={{
+                                  width: '100%',
+                                  height: 'auto',
+                                  display: 'block',
+                                  opacity: b.status === 'past' ? 0.4 : 1,
+                                }}
+                              />
+                            </div>
+                          )}
+
+                          {/* Card content */}
+                          <div style={{ padding: '12px 16px 14px', flex: 1 }}>
+                            {/* Title + status badge */}
+                            <div
+                              style={{
+                                display: 'flex',
+                                gap: 10,
+                                alignItems: 'flex-start',
+                                marginBottom: 8,
+                                flexWrap: 'wrap',
+                              }}
+                            >
+                              <p
+                                style={{
+                                  flex: 1,
+                                  minWidth: 0,
+                                  fontFamily: "'Exo 2', sans-serif",
+                                  fontWeight: 600,
+                                  fontSize: 14,
+                                  color: b.status === 'past' ? C.muted : C.text,
+                                  lineHeight: 1.35,
+                                  wordBreak: 'break-word',
+                                }}
+                              >
+                                {b.name}
+                              </p>
+                              <div
+                                style={{
+                                  flexShrink: 0,
+                                  padding: '3px 9px',
+                                  borderRadius: 5,
+                                  background: info.bg,
+                                  border: `1px solid ${info.border}`,
+                                  color: info.fg,
+                                  fontSize: 9,
+                                  fontFamily: "'Exo 2', sans-serif",
+                                  fontWeight: 800,
+                                  letterSpacing: 1.3,
+                                  animation:
+                                    b.status === 'active'
+                                      ? 'pulse 2s infinite'
+                                      : 'none',
+                                  alignSelf: 'flex-start',
+                                }}
+                              >
+                                {info.label}
+                              </div>
+                            </div>
+
+                            {/* Dates */}
+                            <div
+                              style={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                alignItems: 'center',
+                                gap: 8,
+                                marginBottom: 10,
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontFamily: "'Cinzel',serif",
+                                  fontSize: 9,
+                                  fontWeight: 700,
+                                  letterSpacing: 1.5,
+                                  color:
+                                    b.status === 'past' ? C.golddim : C.gold,
+                                }}
+                              >
+                                {b.status === 'past' || b.status === 'active'
+                                  ? 'NA'
+                                  : 'NA PREDICTED'}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: 13,
+                                  color:
+                                    b.status === 'past' ? C.muted : '#a8bce0',
+                                  fontWeight: 500,
+                                }}
+                              >
+                                {fmtDate(b.dates.start)} —{' '}
+                                {fmtDate(b.dates.end)}
+                              </span>
+                              {days !== null && (
+                                <span
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: 800,
+                                    color:
+                                      days <= 14
+                                        ? C.goldbright
+                                        : days <= 60
+                                          ? C.blue
+                                          : C.muted,
+                                    background:
+                                      days <= 14
+                                        ? '#180e00'
+                                        : days <= 60
+                                          ? C.bluedim
+                                          : C.surf,
+                                    padding: '1px 9px',
+                                    borderRadius: 20,
+                                    border: `1px solid ${days <= 14 ? C.golddim : days <= 60 ? '#1a3060' : C.border}`,
+                                  }}
+                                >
+                                  {days}d away
+                                </span>
+                              )}
+                              {b.status === 'active' && (
+                                <span
+                                  style={{
+                                    fontSize: 11,
+                                    fontWeight: 800,
+                                    color: C.green,
+                                    background: C.greendim,
+                                    padding: '1px 9px',
+                                    borderRadius: 20,
+                                    border: '1px solid #204830',
+                                    animation: 'pulse 2s infinite',
+                                  }}
+                                >
+                                  ● LIVE NOW
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Servants */}
+                            {b.servants.length > 0 && (
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  flexWrap: 'wrap',
+                                  gap: 5,
+                                }}
+                              >
+                                {b.servants.map((s, j) => {
+                                  const hit = q && s.toLowerCase().includes(q);
+                                  return (
+                                    <span
+                                      key={j}
+                                      style={{
+                                        padding: '3px 10px',
+                                        borderRadius: 20,
+                                        fontSize: 12,
+                                        fontWeight: hit ? 700 : 400,
+                                        background: hit ? '#1a1000' : '#0f1428',
+                                        color: hit ? C.goldbright : '#6070a0',
+                                        border: `1px solid ${hit ? C.golddim : '#1c2440'}`,
+                                        boxShadow: hit
+                                          ? `0 0 6px ${C.gold}25`
+                                          : 'none',
+                                        whiteSpace: 'nowrap',
+                                      }}
+                                    >
+                                      {s}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* ── FOOTER ─────────────────────────────────────────────────────────── */}
+              <footer
+                style={{
+                  width: '100%',
+                  borderTop: `1px solid ${C.border}`,
+                  padding: '10px 32px',
+                  flexShrink: 0,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: 8,
+                  fontSize: 10,
+                  color: C.muted,
+                  letterSpacing: 0.8,
+                }}
+              >
+                <span>
+                  DATA: grandorder.gamepress.gg · JP +2 YEARS · PREDICTIONS ONLY
+                </span>
+                <span>
+                  DRAG & DROP CSV ANYWHERE · ↻ REFRESH DATA RE-RUNS SCRAPER
+                </span>
+              </footer>
+            </div>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
