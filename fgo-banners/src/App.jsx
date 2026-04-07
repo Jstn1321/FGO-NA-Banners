@@ -369,24 +369,40 @@ export default function App() {
               onDrop={onDrop}
             >
               <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@300;400;500;600;700;800&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body, #root { width: 100%; height: 100%; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: ${C.bg}; }
-        ::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 3px; }
-        input::placeholder { color: ${C.muted}; }
-        input:focus { outline: none; }
-        button:active { transform: scale(0.97); }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:.55} }
-        @keyframes spin   { to { transform: rotate(360deg); } }
-        .bcard { transition: border-color .18s, box-shadow .18s; }
-        .bcard:hover { border-color: ${C.borderhi} !important; }
-      `}</style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@300;400;500;600;700;800&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body, #root { width: 100%; height: 100%; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: ${C.bg}; }
+  ::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 3px; }
+  input::placeholder { color: ${C.muted}; }
+  input:focus { outline: none; }
+  button:active { transform: scale(0.97); }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:.55} }
+  @keyframes spin   { to { transform: rotate(360deg); } }
+  .bcard { transition: border-color .18s, box-shadow .18s; }
+  .bcard:hover { border-color: ${C.borderhi} !important; }
+  .stats-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .load-csv-btn { display: inline-flex; }
+  @media (max-width: 600px) {
+    .header-title h1 { font-size: 16px !important; letter-spacing: 2px !important; }
+    .header-title p { font-size: 8px !important; letter-spacing: 2px !important; }
+    .header-inner { padding: 10px 16px !important; }
+    .header-controls { gap: 6px !important; }
+    .stats-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+    .stats-row::-webkit-scrollbar { height: 3px; }
+    .load-csv-btn { display: none !important; }
+    .controls-bar { padding: 10px 16px 8px !important; }
+    .banner-grid { padding: 12px 16px 40px !important; }
+    .banner-grid > div > div { grid-template-columns: 1fr !important; }
+    .footer { padding: 8px 16px !important; flex-direction: column; text-align: center; }
+  }
+`}</style>
 
               {/* ── HEADER ─────────────────────────────────────────────────────────── */}
               <header
+                className="header-inner"
                 style={{
                   width: '100%',
                   background: `linear-gradient(180deg,#0b0e1c 0%,${C.bg} 100%)`,
@@ -406,7 +422,7 @@ export default function App() {
                   }}
                 >
                   {/* Title */}
-                  <div>
+                  <div className="header-title">
                     <h1
                       style={{
                         fontFamily: "'Cinzel', serif",
@@ -436,6 +452,7 @@ export default function App() {
 
                   {/* Controls: CSV load + Refresh */}
                   <div
+                    className="header-controls"
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -509,6 +526,7 @@ export default function App() {
 
                     {/* Manual CSV upload */}
                     <button
+                      className="load-csv-btn"
                       onClick={() => fileRef.current.click()}
                       style={{
                         padding: '8px 18px',
@@ -548,7 +566,10 @@ export default function App() {
                 </div>
 
                 {/* Stats row */}
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <div
+                  className="stats-row"
+                  style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}
+                >
                   {[
                     { label: 'BANNERS', val: stats.total, color: C.goldbright },
                     { label: 'UPCOMING', val: stats.upcoming, color: C.blue },
@@ -604,6 +625,7 @@ export default function App() {
 
               {/* ── CONTROLS BAR ───────────────────────────────────────────────────── */}
               <div
+                className="controls-bar"
                 style={{
                   width: '100%',
                   padding: '14px 32px 10px',
@@ -799,6 +821,7 @@ export default function App() {
 
               {/* ── BANNER GRID ─────────────────────────────────────────────────────── */}
               <div
+                className="banner-grid"
                 style={{
                   flex: 1,
                   overflowY: 'auto',
@@ -1087,6 +1110,7 @@ export default function App() {
 
               {/* ── FOOTER ─────────────────────────────────────────────────────────── */}
               <footer
+                className="footer"
                 style={{
                   width: '100%',
                   borderTop: `1px solid ${C.border}`,
