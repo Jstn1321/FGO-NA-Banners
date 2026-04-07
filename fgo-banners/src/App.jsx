@@ -172,7 +172,7 @@ export default function App() {
   const [banners, setBanners] = useState(() => processBanners(EMBEDDED));
   const [query, setQuery] = useState('');
   const [yearFilter, setYearFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('upcoming');
   const [dragging, setDragging] = useState(false);
   const [csvLabel, setCsvLabel] = useState('built-in data · loading CSV…');
   const [refreshState, setRefreshState] = useState('idle'); // idle | loading | success | error
