@@ -386,18 +386,19 @@ export default function App() {
   .stats-row { display: flex; gap: 10px; flex-wrap: wrap; }
   .load-csv-btn { display: inline-flex; }
   @media (max-width: 600px) {
-    .header-title h1 { font-size: 16px !important; letter-spacing: 2px !important; }
-    .header-title p { font-size: 8px !important; letter-spacing: 2px !important; }
-    .header-inner { padding: 10px 16px !important; }
-    .header-controls { gap: 6px !important; }
-    .stats-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
-    .stats-row::-webkit-scrollbar { height: 3px; }
-    .load-csv-btn { display: none !important; }
-    .controls-bar { padding: 10px 16px 8px !important; }
-    .banner-grid { padding: 12px 16px 40px !important; }
-    .banner-grid > div > div { grid-template-columns: 1fr !important; }
-    .footer { padding: 8px 16px !important; flex-direction: column; text-align: center; }
-  }
+  .header-title h1 { font-size: 16px !important; letter-spacing: 2px !important; }
+  .header-title p { font-size: 8px !important; letter-spacing: 2px !important; }
+  .header-inner { padding: 10px 16px !important; }
+  .header-controls { gap: 6px !important; }
+  .stats-row { display: none !important; }
+  .load-csv-btn { display: none !important; }
+  .controls-bar { padding: 10px 16px 8px !important; }
+  .banner-grid { padding: 12px 16px 40px !important; }
+  .banner-grid > div > div { grid-template-columns: 1fr !important; }
+  .footer { padding: 8px 16px !important; flex-direction: column; text-align: center; }
+  .year-pill { display: none !important; }
+  .year-divider { display: none !important; }
+}
 `}</style>
 
               {/* ── HEADER ─────────────────────────────────────────────────────────── */}
@@ -791,6 +792,7 @@ export default function App() {
                     PAST
                   </Pill>
                   <span
+                    className="year-divider"
                     style={{
                       width: 1,
                       background: C.border,
@@ -800,16 +802,17 @@ export default function App() {
                     }}
                   />
                   {years.map((y) => (
-                    <Pill
-                      key={y}
-                      active={yearFilter === y}
-                      accent="#9080d0"
-                      onClick={() =>
-                        setYearFilter((p) => (p === y ? 'all' : y))
-                      }
-                    >
-                      {y}
-                    </Pill>
+                    <span className="year-pill" key={y}>
+                      <Pill
+                        active={yearFilter === y}
+                        accent="#9080d0"
+                        onClick={() =>
+                          setYearFilter((p) => (p === y ? 'all' : y))
+                        }
+                      >
+                        {y}
+                      </Pill>
+                    </span>
                   ))}
                   <span
                     style={{ fontSize: 11, color: C.muted, marginLeft: 'auto' }}
