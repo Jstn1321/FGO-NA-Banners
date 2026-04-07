@@ -29,7 +29,7 @@ const CSV_CANDIDATES = [
 ];
 
 // ── API base — empty string = same origin (nginx proxies /api → Flask:5050) ──
-const API_BASE = '';
+const API_BASE = '/fgo';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function parseDates(str) {
